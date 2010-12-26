@@ -231,6 +231,7 @@ class Client(node.Node, pollmixin.PollMixin):
         return seed.strip()
 
     def init_storage(self):
+        self.accountant = None
         # should we run a storage server (and publish it for others to use)?
         if not self.get_config("storage", "enabled", True, boolean=True):
             return
@@ -288,6 +289,7 @@ class Client(node.Node, pollmixin.PollMixin):
         accountant = Accountant(self.basedir, create_if_missing=True)
         self.add_service(accountant)
         ss.set_accountant(accountant, self.tub)
+        self.accountant = accountant
         self.add_service(ss)
 
         d = self.when_tub_ready()
@@ -302,6 +304,9 @@ class Client(node.Node, pollmixin.PollMixin):
         d.addCallback(_publish)
         d.addErrback(log.err, facility="tahoe.init",
                      level=log.BAD, umid="aLGBKw")
+
+    def get_accountant(self):
+        return self.accountant
 
     def init_client(self):
         helper_furl = self.get_config("client", "helper.furl", None)
